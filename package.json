@@ -1,0 +1,14 @@
+{
+  "name": "d3-finchart",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:aaronlamz/d3-finchart.git",
+  "author": "aaronlamz <aaronlamz2022@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.4.2"
+  },
+  "dependencies": {
+    "d3": "^7.9.0"
+  }
+}
