@@ -1,0 +1,15 @@
+{
+  // 启用在保存时自动格式化
+  "editor.formatOnSave": true,
+
+  // 启用 ESLint 自动修复
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+
+  // 设置 Prettier 为默认格式化工具
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // 禁用 Prettier 的 eslintIntegration（如果你使用 Prettier 插件）
+  "prettier.eslintIntegration": false
+}

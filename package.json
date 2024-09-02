@@ -1,11 +1,24 @@
 {
-  "name": "d3-finchart",
+  "name": "finchart",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "git@github.com:aaronlamz/d3-finchart.git",
+  "repository": "git@github.com:aaronlamz/finchart.git",
   "author": "aaronlamz <aaronlamz2022@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "lint": "eslint src --ext .js",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
+  },
   "devDependencies": {
+    "@eslint/js": "^9.9.1",
+    "eslint": "^9.9.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-promise": "^7.1.0",
+    "eslint-plugin-standard": "^5.0.0",
+    "prettier": "^3.3.3",
     "vite": "^5.4.2"
   },
   "dependencies": {

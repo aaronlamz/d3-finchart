@@ -4,8 +4,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: './src/index.js', // SDK 主入口文件
-      name: 'MyFinancialChartsSDK', // 全局名称
-      fileName: (format) => `my-financial-charts-sdk.${format}.js`, // 输出文件名
+      name: 'FinChart', // 全局名称
+      fileName: (format) => `finchart.${format}.js`, // 输出文件名
     },
     rollupOptions: {
       external: ['d3'], // 外部化 d3 依赖，不打包进 SDK
