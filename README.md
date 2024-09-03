@@ -1,4 +1,4 @@
-# d3-finchart
+# Finchart
 A customizable lightweight financial chart built on d3.js
 
 ## Project
