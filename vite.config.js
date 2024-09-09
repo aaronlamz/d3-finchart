@@ -1,6 +1,12 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite'
 
 export default defineConfig({
+  server: {
+    open: true,
+    port: 3000,
+    strictPort: true,
+    proxy: {},
+  },
   build: {
     lib: {
       entry: './src/index.js', // SDK 主入口文件
@@ -16,4 +22,4 @@ export default defineConfig({
       },
     },
   },
-});
+})

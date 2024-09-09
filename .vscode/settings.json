@@ -4,7 +4,7 @@
 
   // 启用 ESLint 自动修复
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
 
   // 设置 Prettier 为默认格式化工具
