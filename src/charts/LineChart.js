@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { renderGridLines } from './GridLines'
+import { renderGridLines } from '../components/GridLines'
 
 class LineChart {
   constructor(container, config = {}) {
@@ -8,7 +8,7 @@ class LineChart {
       width: config.width || 800,
       height: config.height || 400,
       data: config.data || [],
-      market: config.market || 'hk', // 市场类型
+      market: config.market || 'hk',
     }
     this.initChart()
   }
