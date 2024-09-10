@@ -1,9 +1,11 @@
 # Finchart
+
 A customizable lightweight financial chart built on d3.js
 
 ## Project
+
 ```
-D3-FINCHAT/
+FINCHAT/
 ├── public/                      # 静态资源目录
 │   └── index.html               # 入口 HTML 文件
 ├── src/                         # 源代码目录
