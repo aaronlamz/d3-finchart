@@ -3,12 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FinChart SDK Test</title>
+    <title>FinChart SDK</title>
   </head>
   <body>
     <div id="chart-container"></div>
     <script type="module">
-      // 直接引入 src/index.js 中的代码，不需要打包文件
       import FinChart from '/src/index.js'
       import tencentData from '/public/time-chart-data.json'
       import { formatLatestTime } from './src/utils/format'
@@ -26,6 +25,8 @@
           }
 
           return {
+            ...item,
+            time: item.latestTime + '',
             timestamp,
             price,
             avg,
@@ -34,11 +35,10 @@
       )
       console.log('timeChartData', timeChartData)
 
-      // 初始化分时图，支持现价线和均价线
+      // 初始化分时图
       const lineChart = new FinChart.charts.LineChart(container, {
         width: 800,
         height: 400,
-        timeScale: 'minute', // 分时图
         data: timeChartData,
       })
     </script>
