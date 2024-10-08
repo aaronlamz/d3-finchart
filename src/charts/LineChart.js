@@ -1,5 +1,4 @@
 import * as d3 from 'd3'
-import { renderGridLines } from '../components/GridLines'
 
 class LineChart {
   constructor(container, config = {}) {
@@ -8,17 +7,41 @@ class LineChart {
       width: config.width || 800,
       height: config.height || 400,
       data: config.data || [],
+      backgroundColor: config.backgroundColor || '#1a1a1a',
+      logo:
+        config.logo ||
+        'https://web-static-prd-1257884527.cos.ap-guangzhou.myqcloud.com/img-management/common/logo/marketing-usmart-logo.png',
+      lineColor: config.lineColor || '#0BC0F1',
+      lineWidth: config.lineWidth || 0.6,
+      gradientColors: config.gradientColors || [
+        'rgba(4, 132, 206, 0.29)',
+        'rgba(4, 132, 206, 0)',
+      ],
       market: config.market || 'hk',
+      enableCrosshair: config.enableCrosshair || false,
+      enableIndicators: config.enableIndicators || false,
     }
     this.initChart()
   }
 
-  // 初始化图表
   initChart() {
-    this.createSvg()
-    this.createScales()
-    this.createLineAndArea()
-    this.render()
+    this.createSvg() // 创建 SVG 容器
+    this.addBackground() // 添加底部背景色
+    this.addLogo() // 添加底部 Logo
+    this.defineGradient() // 定义渐变色
+    this.createScales() // 创建比例尺
+    this.createLineAndArea() // 创建折线和渐变区域
+    this.render() // 渲染图表
+
+    // 如果启用十字线功能，添加十字线
+    if (this.config.enableCrosshair) {
+      this.addCrosshair()
+    }
+
+    // 如果启用指标功能，添加指标
+    if (this.config.enableIndicators) {
+      this.addIndicators()
+    }
   }
 
   // 创建 SVG 容器
@@ -28,7 +51,55 @@ class LineChart {
       .append('svg')
       .attr('width', this.config.width)
       .attr('height', this.config.height)
-      .style('font-family', 'Microsoft Yahei')
+  }
+
+  // 添加底部背景色
+  addBackground() {
+    this.svg
+      .append('rect')
+      .attr('width', this.config.width)
+      .attr('height', this.config.height)
+      .attr('fill', this.config.backgroundColor) // 背景色
+  }
+
+  // 添加底部 Logo
+  addLogo() {
+    if (this.config.logo) {
+      const logoWidth = 80 // Logo 的宽度
+      const logoHeight = 50 // Logo 的高度
+
+      this.svg
+        .append('image')
+        .attr('xlink:href', this.config.logo) // 引用 Logo 图片
+        .attr('x', (this.config.width - logoWidth) / 2) // 居中显示
+        .attr('y', (this.config.height - logoHeight) / 2) // 在底部显示
+        .attr('width', logoWidth)
+        .attr('height', logoHeight)
+    }
+  }
+
+  // 定义折线图的渐变色
+  defineGradient() {
+    const defs = this.svg.append('defs')
+    const gradient = defs
+      .append('linearGradient')
+      .attr('id', 'line-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '0%')
+      .attr('y2', '100%') // 垂直渐变
+
+    gradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', this.config.gradientColors[0])
+      .attr('stop-opacity', 0.8) // 顶部颜色更加不透明
+
+    gradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', this.config.gradientColors[1])
+      .attr('stop-opacity', 0.2) // 底部部分透明
   }
 
   // 创建 X 和 Y 轴比例尺
@@ -117,7 +188,9 @@ class LineChart {
     const yExtent = d3.extent(data, (d) => d.price)
     this.yScale.domain(yExtent)
 
-    this.svg.selectAll('*').remove() // 清空之前的内容
+    // 清除折线图和渐变区域的 path 元素，但保留其他内容
+    this.svg.selectAll('.line-path').remove()
+    this.svg.selectAll('.area-path').remove()
 
     this.renderAxes() // 绘制 X 轴和 Y 轴
 
@@ -125,19 +198,30 @@ class LineChart {
     this.svg
       .append('path')
       .datum(data)
-      .attr('fill', 'lightsteelblue') // 使用纯色填充
+      .attr('fill', 'url(#line-gradient)') // 使用渐变色填充
       .attr('d', this.area)
 
-    // 绘制折线
+    // 绘制折线图
     this.svg
       .append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
-      .attr('stroke-width', 0.5)
+      .attr('stroke', this.config.lineColor)
+      .attr('stroke-width', this.config.lineWidth)
       .attr('d', this.line)
 
     this.renderPriceAndAvgLines() // 渲染现价线和均价线
+  }
+  // 添加十字线功能
+  addCrosshair() {
+    // 十字线逻辑
+    console.log('十字线功能已启用')
+  }
+
+  // 添加指标功能
+  addIndicators() {
+    // 指标渲染逻辑
+    console.log('指标功能已启用')
   }
 
   // 绘制现价线和均价线
