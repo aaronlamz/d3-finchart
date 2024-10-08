@@ -20,6 +20,10 @@ class LineChart {
       market: config.market || 'hk',
       enableCrosshair: config.enableCrosshair || false,
       enableIndicators: config.enableIndicators || false,
+      xAxisFontColor: config.xAxisFontColor || 'rgba(109, 109, 109, 1)', // X轴字体颜色
+      yAxisFontColor: config.yAxisFontColor || '#6d6d6d', // Y轴字体颜色
+      xAxisLineColor: config.xAxisLineColor || '#ccc', // X轴线条颜色
+      yAxisLineColor: config.yAxisLineColor || '#ccc', // Y轴线条颜色
     }
     this.initChart()
   }
@@ -49,8 +53,10 @@ class LineChart {
     this.svg = d3
       .select(this.container)
       .append('svg')
-      .attr('width', this.config.width)
-      .attr('height', this.config.height)
+      .attr('viewBox', `0 0 ${this.config.width} ${this.config.height}`) // 自适应
+      .attr('preserveAspectRatio', 'xMidYMid meet') // 保持比例
+      .style('width', '100%') // 让 SVG 根据容器自动调整宽度
+      .style('height', 'auto') // 高度自动适应
   }
 
   // 添加底部背景色
@@ -168,12 +174,22 @@ class LineChart {
             i === 1 ? '12:00/13:00' : i === 0 ? '09:30' : '16:00'
           )
       )
+      .selectAll('text') // 自定义 X 轴字体颜色
+      .attr('fill', this.config.xAxisFontColor)
+    this.svg
+      .selectAll('.domain, .tick line') // 自定义 X 轴线条颜色
+      .attr('stroke', this.config.xAxisLineColor)
 
     // 绘制 Y 轴
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
       .call(d3.axisLeft(this.yScale))
+      .selectAll('text') // 自定义 X 轴字体颜色
+      .attr('fill', this.config.yAxisFontColor)
+    this.svg
+      .selectAll('.domain, .tick line') // 自定义 Y 轴线条颜色
+      .attr('stroke', this.config.yAxisLineColor)
   }
 
   // 渲染图表
