@@ -17,7 +17,6 @@ class LineChart {
   initChart() {
     this.createSvg()
     this.createScales()
-    this.defineGradient()
     this.createLineAndArea()
     this.render()
   }
@@ -29,6 +28,7 @@ class LineChart {
       .append('svg')
       .attr('width', this.config.width)
       .attr('height', this.config.height)
+      .style('font-family', 'Microsoft Yahei')
   }
 
   // 创建 X 和 Y 轴比例尺
@@ -39,31 +39,6 @@ class LineChart {
       .range([50, this.config.width - 50])
 
     this.yScale = d3.scaleLinear().range([this.config.height - 50, 50])
-  }
-
-  // 定义渐变色
-  defineGradient() {
-    const defs = this.svg.append('defs')
-
-    const gradient = defs
-      .append('linearGradient')
-      .attr('id', 'price-gradient')
-      .attr('x1', '0%')
-      .attr('y1', '0%')
-      .attr('x2', '0%')
-      .attr('y2', '100%')
-
-    gradient
-      .append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', 'steelblue')
-      .attr('stop-opacity', 0.6)
-
-    gradient
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', 'steelblue')
-      .attr('stop-opacity', 0)
   }
 
   // 创建折线和面积图函数
