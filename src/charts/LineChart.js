@@ -6,11 +6,12 @@ class LineChart {
     this.config = {
       width: config.width || 800,
       height: config.height || 400,
+      padding: 50,
       data: config.data || [],
       backgroundColor: config.backgroundColor || '#1a1a1a',
       logo: config.logo || '/images/logo.png',
       lineColor: config.lineColor || '#0BC0F1',
-      lineWidth: config.lineWidth || 0.6,
+      lineWidth: config.lineWidth || 0.5,
       gradientColors: config.gradientColors || [
         'rgba(4, 132, 206, 0.29)',
         'rgba(4, 132, 206, 0)',
@@ -69,8 +70,8 @@ class LineChart {
   // 添加底部 Logo
   addLogo() {
     if (this.config.logo) {
-      const logoWidth = 100 // Logo 的宽度
-      const logoHeight = 80 // Logo 的高度
+      const logoWidth = 100
+      const logoHeight = 80
 
       this.svg
         .append('image')
@@ -111,9 +112,11 @@ class LineChart {
     this.xScale = d3
       .scaleLinear()
       .domain([0, 100])
-      .range([50, this.config.width - 50])
+      .range([this.config.padding, this.config.width - this.config.padding])
 
-    this.yScale = d3.scaleLinear().range([this.config.height - 50, 50])
+    this.yScale = d3
+      .scaleLinear()
+      .range([this.config.height - this.config.padding, this.config.padding])
   }
 
   // 创建折线和面积图函数
