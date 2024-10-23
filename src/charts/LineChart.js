@@ -182,7 +182,7 @@ class LineChart {
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
-      .call(d3.axisLeft(this.yScale))
+      .call(d3.axisLeft(this.yScale).ticks(5))
       .selectAll('text') // 自定义 X 轴字体颜色
       .attr('fill', this.config.yAxisFontColor)
     this.svg
