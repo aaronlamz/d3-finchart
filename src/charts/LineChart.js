@@ -69,8 +69,8 @@ class LineChart {
   // 添加底部 Logo
   addLogo() {
     if (this.config.logo) {
-      const logoWidth = 80 // Logo 的宽度
-      const logoHeight = 50 // Logo 的高度
+      const logoWidth = 100 // Logo 的宽度
+      const logoHeight = 80 // Logo 的高度
 
       this.svg
         .append('image')
