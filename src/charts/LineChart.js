@@ -8,9 +8,7 @@ class LineChart {
       height: config.height || 400,
       data: config.data || [],
       backgroundColor: config.backgroundColor || '#1a1a1a',
-      logo:
-        config.logo ||
-        'https://web-static-prd-1257884527.cos.ap-guangzhou.myqcloud.com/img-management/common/logo/marketing-usmart-logo.png',
+      logo: config.logo || '/images/logo.png',
       lineColor: config.lineColor || '#0BC0F1',
       lineWidth: config.lineWidth || 0.6,
       gradientColors: config.gradientColors || [
