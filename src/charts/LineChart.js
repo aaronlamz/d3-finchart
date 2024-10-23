@@ -262,6 +262,7 @@ class LineChart {
       .attr('y1', this.yScale(latestData.avg))
       .attr('y2', this.yScale(latestData.avg))
       .attr('stroke', 'orange')
+      .attr('stroke-dasharray', '4 2')
       .attr('stroke-width', 0.5)
   }
 
