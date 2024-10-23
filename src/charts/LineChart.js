@@ -162,7 +162,7 @@ class LineChart {
   }
 
   // 绘制 X 轴和 Y 轴
-  renderAxes() {
+  renderAxes(data) {
     // 绘制 X 轴
     this.svg
       .append('g')
@@ -182,10 +182,18 @@ class LineChart {
       .attr('stroke', this.config.xAxisLineColor)
 
     // 绘制 Y 轴
+    const yExtent = d3.extent(data, (d) => d.price)
+    const yMin = yExtent[0] // 最小值
+    const yMax = yExtent[1] // 最大值
+    this.yScale.domain([yMin, yMax])
+
+    // 生成自定义的刻度数组，从最小值到最大值，确保最后一个刻度不一定间隔一致
+    const tickValues = d3.range(yMin, yMax, (yMax - yMin) / 4) // 4个刻度，最后一个不保证间隔一致
+    tickValues.push(yMax) // 添加最大值为最后一个刻度
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
-      .call(d3.axisLeft(this.yScale).ticks(5))
+      .call(d3.axisLeft(this.yScale).tickValues(tickValues))
       .selectAll('text') // 自定义 X 轴字体颜色
       .attr('fill', this.config.yAxisFontColor)
     this.svg
@@ -202,14 +210,11 @@ class LineChart {
       return
     }
 
-    const yExtent = d3.extent(data, (d) => d.price)
-    this.yScale.domain(yExtent)
-
     // 清除折线图和渐变区域的 path 元素，但保留其他内容
     this.svg.selectAll('.line-path').remove()
     this.svg.selectAll('.area-path').remove()
 
-    this.renderAxes() // 绘制 X 轴和 Y 轴
+    this.renderAxes(data) // 绘制 X 轴和 Y 轴
 
     // 绘制面积图
     this.svg
