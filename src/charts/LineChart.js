@@ -227,17 +227,15 @@ class LineChart {
       .attr('stroke-width', this.config.lineWidth)
       .attr('d', this.line)
 
-    this.renderPriceAndAvgLines() // 渲染现价线和均价线
+    this.renderPriceAndAvgLines()
   }
   // 添加十字线功能
   addCrosshair() {
-    // 十字线逻辑
     console.log('十字线功能已启用')
   }
 
   // 添加指标功能
   addIndicators() {
-    // 指标渲染逻辑
     console.log('指标功能已启用')
   }
 
