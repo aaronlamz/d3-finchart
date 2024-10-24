@@ -23,8 +23,14 @@ class LineChart {
       yAxisFontColor: config.yAxisFontColor || '#6d6d6d', // Y轴字体颜色
       xAxisLineColor: config.xAxisLineColor || '#ccc', // X轴线条颜色
       yAxisLineColor: config.yAxisLineColor || '#ccc', // Y轴线条颜色
+      classNamePrefix: config.classNamePrefix || 'finchart', // 全局类名前缀
     }
     this.initChart()
+  }
+
+  // 获取带有全局前缀的类名
+  getClassName(suffix) {
+    return `${this.config.classNamePrefix}-${suffix}`
   }
 
   initChart() {
@@ -56,6 +62,7 @@ class LineChart {
       .attr('preserveAspectRatio', 'xMidYMid meet') // 保持比例
       .style('width', '100%') // 让 SVG 根据容器自动调整宽度
       .style('height', 'auto') // 高度自动适应
+      .attr('class', this.getClassName('svg-container')) // 使用类名前缀
   }
 
   // 添加底部背景色
@@ -65,6 +72,7 @@ class LineChart {
       .attr('width', this.config.width)
       .attr('height', this.config.height)
       .attr('fill', this.config.backgroundColor) // 背景色
+      .attr('class', this.getClassName('background')) // 使用类名前缀
   }
 
   // 添加底部 Logo
@@ -77,9 +85,10 @@ class LineChart {
         .append('image')
         .attr('xlink:href', this.config.logo) // 引用 Logo 图片
         .attr('x', (this.config.width - logoWidth) / 2) // 居中显示
-        .attr('y', (this.config.height - logoHeight) / 2) // 在底部显示
+        .attr('y', (this.config.height - logoHeight) / 2) // 居中显示
         .attr('width', logoWidth)
         .attr('height', logoHeight)
+        .attr('class', this.getClassName('logo')) // 使用类名前缀
     }
   }
 
@@ -88,23 +97,23 @@ class LineChart {
     const defs = this.svg.append('defs')
     const gradient = defs
       .append('linearGradient')
-      .attr('id', 'line-gradient')
+      .attr('id', this.getClassName('line-gradient'))
       .attr('x1', '0%')
       .attr('y1', '0%')
       .attr('x2', '0%')
-      .attr('y2', '100%') // 垂直渐变
+      .attr('y2', '100%')
 
     gradient
       .append('stop')
       .attr('offset', '0%')
       .attr('stop-color', this.config.gradientColors[0])
-      .attr('stop-opacity', 0.8) // 顶部颜色更加不透明
+      .attr('stop-opacity', 0.8)
 
     gradient
       .append('stop')
       .attr('offset', '100%')
       .attr('stop-color', this.config.gradientColors[1])
-      .attr('stop-opacity', 0.2) // 底部部分透明
+      .attr('stop-opacity', 0.2)
   }
 
   // 创建 X 和 Y 轴比例尺
@@ -129,11 +138,10 @@ class LineChart {
     this.area = d3
       .area()
       .x((d) => this.getXScale(d.timestamp))
-      .y0(this.config.height - 50)
+      .y0(this.config.height - this.config.padding)
       .y1((d) => this.yScale(d.price))
   }
 
-  // 自定义 X 轴比例尺函数
   getXScale(timestamp) {
     const openTime = this.timeToMilliseconds('09:30')
     const lunchStartTime = this.timeToMilliseconds('12:00')
@@ -166,7 +174,10 @@ class LineChart {
     // 绘制 X 轴
     this.svg
       .append('g')
-      .attr('transform', `translate(0,${this.config.height - 50})`)
+      .attr(
+        'transform',
+        `translate(0,${this.config.height - this.config.padding})`
+      )
       .call(
         d3
           .axisBottom(this.xScale)
@@ -175,10 +186,11 @@ class LineChart {
             i === 1 ? '12:00/13:00' : i === 0 ? '09:30' : '16:00'
           )
       )
-      .selectAll('text') // 自定义 X 轴字体颜色
+      .selectAll('text')
       .attr('fill', this.config.xAxisFontColor)
+
     this.svg
-      .selectAll('.domain, .tick line') // 自定义 X 轴线条颜色
+      .selectAll('.domain, .tick line')
       .attr('stroke', this.config.xAxisLineColor)
 
     // 绘制 Y 轴
@@ -194,14 +206,14 @@ class LineChart {
       .append('g')
       .attr('transform', 'translate(50, 0)')
       .call(d3.axisLeft(this.yScale).tickValues(tickValues))
-      .selectAll('text') // 自定义 X 轴字体颜色
+      .selectAll('text')
       .attr('fill', this.config.yAxisFontColor)
+
     this.svg
-      .selectAll('.domain, .tick line') // 自定义 Y 轴线条颜色
+      .selectAll('.domain, .tick line')
       .attr('stroke', this.config.yAxisLineColor)
   }
 
-  // 渲染图表
   render() {
     const data = this.config.data
 
@@ -210,23 +222,24 @@ class LineChart {
       return
     }
 
-    // 清除折线图和渐变区域的 path 元素，但保留其他内容
-    this.svg.selectAll('.line-path').remove()
-    this.svg.selectAll('.area-path').remove()
+    this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('area-path')}`).remove()
 
-    this.renderAxes(data) // 绘制 X 轴和 Y 轴
+    this.renderAxes(data)
 
     // 绘制面积图
     this.svg
       .append('path')
       .datum(data)
-      .attr('fill', 'url(#line-gradient)') // 使用渐变色填充
+      .attr('class', this.getClassName('area-path'))
+      .attr('fill', `url(#${this.getClassName('line-gradient')})`)
       .attr('d', this.area)
 
     // 绘制折线图
     this.svg
       .append('path')
       .datum(data)
+      .attr('class', this.getClassName('line-path'))
       .attr('fill', 'none')
       .attr('stroke', this.config.lineColor)
       .attr('stroke-width', this.config.lineWidth)
@@ -252,6 +265,7 @@ class LineChart {
     // 现价线
     this.svg
       .append('line')
+      .attr('class', this.getClassName('price-line'))
       .attr('x1', this.xScale(this.xScale.domain()[0]))
       .attr('x2', this.xScale(this.xScale.domain()[1]))
       .attr('y1', this.yScale(latestData.price))
@@ -263,6 +277,7 @@ class LineChart {
     // 均价线
     this.svg
       .append('line')
+      .attr('class', this.getClassName('avg-line'))
       .attr('x1', this.xScale(this.xScale.domain()[0]))
       .attr('x2', this.xScale(this.xScale.domain()[1]))
       .attr('y1', this.yScale(latestData.avg))
