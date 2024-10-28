@@ -1,5 +1,7 @@
 import * as d3 from 'd3'
-
+/**
+ * 分时图、5日分时图
+ */
 class LineChart {
   constructor(container, config = {}) {
     this.container = container
@@ -26,12 +28,11 @@ class LineChart {
       classNamePrefix: config.classNamePrefix || 'finchart',
       showAvgLine: config.showAvgLine || true,
       showPriceLine: config.showPriceLine || true,
-      base: config.base || 1000, // 昨收价格的基数
+      base: config.base || 1000, // 基数用于计算涨跌幅，接口获取，默认1000
     }
     this.initChart()
   }
 
-  // 动态获取带前缀的类名
   getClassName(suffix) {
     return `${this.config.classNamePrefix}-${suffix}`
   }
@@ -165,6 +166,9 @@ class LineChart {
 
   renderAxes(data) {
     const xAxisClass = this.getClassName('x-axis')
+    const yAxisLeftClass = this.getClassName('y-axis-left')
+    const yAxisRightClass = this.getClassName('y-axis-right')
+
     this.svg
       .append('g')
       .attr(
@@ -182,23 +186,20 @@ class LineChart {
       )
       .selectAll('text')
       .attr('fill', this.config.xAxisFontColor)
+
     this.svg
       .selectAll(`.${xAxisClass} .domain, .${xAxisClass} .tick line`)
       .attr('stroke', this.config.xAxisLineColor)
 
-    const yAxisLeftClass = this.getClassName('y-axis-left')
-    const yAxisRightClass = this.getClassName('y-axis-right')
-
     const yExtent = d3.extent(data, (d) => d.price)
-    this.yScale.domain([yExtent[0], yExtent[1]])
+    const yMin = yExtent[0]
+    const yMax = yExtent[1]
+    this.yScale.domain([yMin, yMax])
 
-    const tickValues = d3.range(
-      yExtent[0],
-      yExtent[1],
-      (yExtent[1] - yExtent[0]) / 4
-    )
-    tickValues.push(yExtent[1])
+    const tickValues = d3.range(yMin, yMax, (yMax - yMin) / 4)
+    tickValues.push(yMax)
 
+    // 左侧 Y 轴
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
@@ -212,18 +213,24 @@ class LineChart {
       .attr('stroke', this.config.yAxisLineColor)
 
     const preClose = data[0].preClose / this.config.base
+
+    // 右侧 Y 轴显示涨跌幅
     this.svg
       .append('g')
       .attr('transform', `translate(${this.config.width - 50}, 0)`)
       .attr('class', yAxisRightClass)
       .call(
-        d3.axisRight(this.yScale).tickFormat((d) => {
-          const percentChange = ((d - preClose) / preClose) * 100
-          return `${percentChange.toFixed(2)}%`
-        })
+        d3
+          .axisRight(this.yScale)
+          .tickValues(tickValues)
+          .tickFormat((d) => {
+            const percentChange = ((d - preClose) / preClose) * 100
+            return `${percentChange.toFixed(2)}%`
+          })
       )
       .selectAll('text')
       .attr('fill', this.config.yAxisFontColor)
+
     this.svg
       .selectAll(`.${yAxisRightClass} .domain, .${yAxisRightClass} .tick line`)
       .attr('stroke', this.config.yAxisLineColor)
@@ -256,10 +263,10 @@ class LineChart {
       .attr('stroke', this.config.lineColor)
       .attr('stroke-width', this.config.lineWidth)
       .attr('d', this.line)
+
     this.renderPriceAndAvgLines()
   }
 
-  // 渲染线条的通用方法
   renderLine(value, classNameSuffix, color) {
     this.svg
       .append('line')
@@ -273,7 +280,6 @@ class LineChart {
       .attr('stroke-width', 0.5)
   }
 
-  // 渲染均价线和现价线
   renderPriceAndAvgLines() {
     const latestData = this.config.data[this.config.data.length - 1]
     if (!latestData) return
@@ -287,7 +293,6 @@ class LineChart {
     }
   }
 
-  // 更新数据并重新渲染
   updateData(newData) {
     this.config.data = newData
     this.renderChart()
