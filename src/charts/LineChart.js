@@ -6,7 +6,7 @@ class LineChart {
     this.config = {
       width: config.width || 800,
       height: config.height || 400,
-      padding: 50,
+      padding: config.padding || 50,
       data: config.data || [],
       backgroundColor: config.backgroundColor || '#1a1a1a',
       logo: config.logo || '/images/logo.png',
@@ -24,6 +24,8 @@ class LineChart {
       xAxisLineColor: config.xAxisLineColor || '#ccc', // X轴线条颜色
       yAxisLineColor: config.yAxisLineColor || '#ccc', // Y轴线条颜色
       classNamePrefix: config.classNamePrefix || 'finchart', // 全局类名前缀
+      showAvgLine: config.showAvgLine || true, // 是否显示均价线
+      showPriceLine: config.showPriceLine || true, // 是否显示现价线
     }
     this.initChart()
   }
@@ -34,20 +36,18 @@ class LineChart {
   }
 
   initChart() {
-    this.createSvg() // 创建 SVG 容器
-    this.addBackground() // 添加底部背景色
-    this.addLogo() // 添加底部 Logo
-    this.defineGradient() // 定义渐变色
-    this.createScales() // 创建比例尺
-    this.createLineAndArea() // 创建折线和渐变区域
-    this.render() // 渲染图表
+    this.createSvg()
+    this.addBackground()
+    this.addLogo()
+    this.defineGradient()
+    this.createScales()
+    this.createLineAndArea()
+    this.renderChart()
 
-    // 如果启用十字线功能，添加十字线
     if (this.config.enableCrosshair) {
       this.addCrosshair()
     }
 
-    // 如果启用指标功能，添加指标
     if (this.config.enableIndicators) {
       this.addIndicators()
     }
@@ -58,11 +58,11 @@ class LineChart {
     this.svg = d3
       .select(this.container)
       .append('svg')
-      .attr('viewBox', `0 0 ${this.config.width} ${this.config.height}`) // 自适应
-      .attr('preserveAspectRatio', 'xMidYMid meet') // 保持比例
-      .style('width', '100%') // 让 SVG 根据容器自动调整宽度
-      .style('height', 'auto') // 高度自动适应
-      .attr('class', this.getClassName('svg-container')) // 使用类名前缀
+      .attr('viewBox', `0 0 ${this.config.width} ${this.config.height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('width', '100%')
+      .style('height', 'auto')
+      .attr('class', this.getClassName('svg-container'))
   }
 
   // 添加底部背景色
@@ -71,8 +71,8 @@ class LineChart {
       .append('rect')
       .attr('width', this.config.width)
       .attr('height', this.config.height)
-      .attr('fill', this.config.backgroundColor) // 背景色
-      .attr('class', this.getClassName('background')) // 使用类名前缀
+      .attr('fill', this.config.backgroundColor)
+      .attr('class', this.getClassName('background'))
   }
 
   // 添加底部 Logo
@@ -83,12 +83,12 @@ class LineChart {
 
       this.svg
         .append('image')
-        .attr('xlink:href', this.config.logo) // 引用 Logo 图片
-        .attr('x', (this.config.width - logoWidth) / 2) // 居中显示
-        .attr('y', (this.config.height - logoHeight) / 2) // 居中显示
+        .attr('xlink:href', this.config.logo)
+        .attr('x', (this.config.width - logoWidth) / 2)
+        .attr('y', (this.config.height - logoHeight) / 2)
         .attr('width', logoWidth)
         .attr('height', logoHeight)
-        .attr('class', this.getClassName('logo')) // 使用类名前缀
+        .attr('class', this.getClassName('logo'))
     }
   }
 
@@ -142,6 +142,7 @@ class LineChart {
       .y1((d) => this.yScale(d.price))
   }
 
+  // 获取 X 轴刻度
   getXScale(timestamp) {
     const openTime = this.timeToMilliseconds('09:30')
     const lunchStartTime = this.timeToMilliseconds('12:00')
@@ -169,7 +170,7 @@ class LineChart {
     return (hours * 60 * 60 + minutes * 60) * 1000
   }
 
-  // 绘制 X 轴和 Y 轴
+  // 绘制 X 轴和自定义 Y 轴
   renderAxes(data) {
     // 绘制 X 轴
     this.svg
@@ -193,15 +194,16 @@ class LineChart {
       .selectAll('.domain, .tick line')
       .attr('stroke', this.config.xAxisLineColor)
 
-    // 绘制 Y 轴
+    // 自定义 Y 轴
     const yExtent = d3.extent(data, (d) => d.price)
-    const yMin = yExtent[0] // 最小值
-    const yMax = yExtent[1] // 最大值
+    const yMin = yExtent[0]
+    const yMax = yExtent[1]
     this.yScale.domain([yMin, yMax])
 
     // 生成自定义的刻度数组，从最小值到最大值，确保最后一个刻度不一定间隔一致
-    const tickValues = d3.range(yMin, yMax, (yMax - yMin) / 4) // 4个刻度，最后一个不保证间隔一致
-    tickValues.push(yMax) // 添加最大值为最后一个刻度
+    const tickValues = d3.range(yMin, yMax, (yMax - yMin) / 4)
+    tickValues.push(yMax)
+
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
@@ -214,7 +216,7 @@ class LineChart {
       .attr('stroke', this.config.yAxisLineColor)
   }
 
-  render() {
+  renderChart() {
     const data = this.config.data
 
     if (!data.length) {
@@ -247,42 +249,31 @@ class LineChart {
 
     this.renderPriceAndAvgLines()
   }
-  // 添加十字线功能
-  addCrosshair() {
-    console.log('十字线功能已启用')
-  }
 
-  // 添加指标功能
-  addIndicators() {
-    console.log('指标功能已启用')
-  }
-
-  // 绘制现价线和均价线
+  // 渲染均价线和现价线
   renderPriceAndAvgLines() {
     const latestData = this.config.data[this.config.data.length - 1]
     if (!latestData) return
 
-    // 现价线
-    this.svg
-      .append('line')
-      .attr('class', this.getClassName('price-line'))
-      .attr('x1', this.xScale(this.xScale.domain()[0]))
-      .attr('x2', this.xScale(this.xScale.domain()[1]))
-      .attr('y1', this.yScale(latestData.price))
-      .attr('y2', this.yScale(latestData.price))
-      .attr('stroke', 'red')
-      .attr('stroke-dasharray', '4 2')
-      .attr('stroke-width', 0.5)
+    if (this.config.showPriceLine) {
+      this.renderLine(latestData.price, 'price-line', 'red')
+    }
 
-    // 均价线
+    if (this.config.showAvgLine && latestData.avg !== undefined) {
+      this.renderLine(latestData.avg, 'avg-line', 'orange')
+    }
+  }
+
+  // 渲染线条的通用方法
+  renderLine(value, classNameSuffix, color) {
     this.svg
       .append('line')
-      .attr('class', this.getClassName('avg-line'))
+      .attr('class', this.getClassName(classNameSuffix))
       .attr('x1', this.xScale(this.xScale.domain()[0]))
       .attr('x2', this.xScale(this.xScale.domain()[1]))
-      .attr('y1', this.yScale(latestData.avg))
-      .attr('y2', this.yScale(latestData.avg))
-      .attr('stroke', 'orange')
+      .attr('y1', this.yScale(value))
+      .attr('y2', this.yScale(value))
+      .attr('stroke', color)
       .attr('stroke-dasharray', '4 2')
       .attr('stroke-width', 0.5)
   }
@@ -290,7 +281,7 @@ class LineChart {
   // 更新数据并重新渲染
   updateData(newData) {
     this.config.data = newData
-    this.render()
+    this.renderChart()
   }
 }
 
