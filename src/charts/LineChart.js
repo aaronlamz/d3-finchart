@@ -1,7 +1,5 @@
 import * as d3 from 'd3'
-/**
- * 分时图、5日分时图
- */
+
 class LineChart {
   constructor(container, config = {}) {
     this.container = container
@@ -28,7 +26,11 @@ class LineChart {
       classNamePrefix: config.classNamePrefix || 'finchart',
       showAvgLine: config.showAvgLine || true,
       showPriceLine: config.showPriceLine || true,
-      base: config.base || 1000, // 基数用于计算涨跌幅，接口获取，默认1000
+      priceColorConfig: config.priceColorConfig || {
+        upColor: 'red',
+        downColor: 'green',
+      },
+      base: config.base || 1000,
     }
     this.initChart()
   }
@@ -199,20 +201,35 @@ class LineChart {
     const tickValues = d3.range(yMin, yMax, (yMax - yMin) / 4)
     tickValues.push(yMax)
 
+    const preClose = data[0].preClose / this.config.base
+
     // 左侧 Y 轴
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
       .attr('class', yAxisLeftClass)
-      .call(d3.axisLeft(this.yScale).tickValues(tickValues))
+      .call(
+        d3
+          .axisLeft(this.yScale)
+          .tickValues(tickValues)
+          .tickFormat((d) => {
+            const color =
+              d > preClose
+                ? this.config.priceColorConfig.upColor
+                : this.config.priceColorConfig.downColor
+            return d.toFixed(2)
+          })
+      )
       .selectAll('text')
-      .attr('fill', this.config.yAxisFontColor)
+      .attr('fill', (d) =>
+        d > preClose
+          ? this.config.priceColorConfig.upColor
+          : this.config.priceColorConfig.downColor
+      )
 
     this.svg
       .selectAll(`.${yAxisLeftClass} .domain, .${yAxisLeftClass} .tick line`)
       .attr('stroke', this.config.yAxisLineColor)
-
-    const preClose = data[0].preClose / this.config.base
 
     // 右侧 Y 轴显示涨跌幅
     this.svg
@@ -225,11 +242,15 @@ class LineChart {
           .tickValues(tickValues)
           .tickFormat((d) => {
             const percentChange = ((d - preClose) / preClose) * 100
-            return `${percentChange.toFixed(2)}%`
+            return percentChange.toFixed(2) + '%'
           })
       )
       .selectAll('text')
-      .attr('fill', this.config.yAxisFontColor)
+      .attr('fill', (d) =>
+        d > preClose
+          ? this.config.priceColorConfig.upColor
+          : this.config.priceColorConfig.downColor
+      )
 
     this.svg
       .selectAll(`.${yAxisRightClass} .domain, .${yAxisRightClass} .tick line`)
@@ -238,6 +259,7 @@ class LineChart {
 
   renderChart() {
     const data = this.config.data
+
     if (!data.length) {
       console.error('没有数据可供渲染')
       return
@@ -267,19 +289,6 @@ class LineChart {
     this.renderPriceAndAvgLines()
   }
 
-  renderLine(value, classNameSuffix, color) {
-    this.svg
-      .append('line')
-      .attr('class', this.getClassName(classNameSuffix))
-      .attr('x1', this.xScale(this.xScale.domain()[0]))
-      .attr('x2', this.xScale(this.xScale.domain()[1]))
-      .attr('y1', this.yScale(value))
-      .attr('y2', this.yScale(value))
-      .attr('stroke', color)
-      .attr('stroke-dasharray', '4 2')
-      .attr('stroke-width', 0.5)
-  }
-
   renderPriceAndAvgLines() {
     const latestData = this.config.data[this.config.data.length - 1]
     if (!latestData) return
@@ -291,6 +300,19 @@ class LineChart {
     if (this.config.showAvgLine && latestData.avg !== undefined) {
       this.renderLine(latestData.avg, 'avg-line', 'orange')
     }
+  }
+
+  renderLine(value, classNameSuffix, color) {
+    this.svg
+      .append('line')
+      .attr('class', this.getClassName(classNameSuffix))
+      .attr('x1', this.xScale(this.xScale.domain()[0]))
+      .attr('x2', this.xScale(this.xScale.domain()[1]))
+      .attr('y1', this.yScale(value))
+      .attr('y2', this.yScale(value))
+      .attr('stroke', color)
+      .attr('stroke-dasharray', '4 2')
+      .attr('stroke-width', 0.5)
   }
 
   updateData(newData) {
