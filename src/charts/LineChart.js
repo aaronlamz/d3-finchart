@@ -1,5 +1,8 @@
 import * as d3 from 'd3'
 
+/**
+ * 1/5日分时图模块
+ */
 class LineChart {
   constructor(container, config = {}) {
     this.container = container
@@ -17,6 +20,7 @@ class LineChart {
         'rgba(4, 132, 206, 0)',
       ],
       market: config.market || 'hk',
+      mode: config.mode || 1, // 1 日或 5 日分时模式
       enableCrosshair: config.enableCrosshair || false,
       enableIndicators: config.enableIndicators || false,
       xAxisFontColor: config.xAxisFontColor || 'rgba(109, 109, 109, 1)',
@@ -121,7 +125,7 @@ class LineChart {
   createScales() {
     this.xScale = d3
       .scaleLinear()
-      .domain([0, 100])
+      .domain([0, this.config.mode === 1 ? 100 : 500]) // 100 为 1 日，500 为 5 日
       .range([this.config.padding, this.config.width - this.config.padding])
 
     this.yScale = d3
@@ -143,6 +147,7 @@ class LineChart {
   }
 
   getXScale(timestamp) {
+    const dayScaleFactor = this.config.mode === 1 ? 100 : 500
     const openTime = this.timeToMilliseconds('09:30')
     const lunchStartTime = this.timeToMilliseconds('12:00')
     const lunchEndTime = this.timeToMilliseconds('13:00')
@@ -153,14 +158,17 @@ class LineChart {
 
     if (timeOfDay < lunchStartTime) {
       return this.xScale(
-        ((timeOfDay - openTime) / (lunchStartTime - openTime)) * 50
+        ((timeOfDay - openTime) / (lunchStartTime - openTime)) *
+          (dayScaleFactor / 2)
       )
     } else if (timeOfDay >= lunchEndTime) {
       return this.xScale(
-        50 + ((timeOfDay - lunchEndTime) / (closeTime - lunchEndTime)) * 50
+        dayScaleFactor / 2 +
+          ((timeOfDay - lunchEndTime) / (closeTime - lunchEndTime)) *
+            (dayScaleFactor / 2)
       )
     }
-    return this.xScale(50)
+    return this.xScale(dayScaleFactor / 2) // 合并午休时间段
   }
 
   timeToMilliseconds(timeStr) {
@@ -216,7 +224,10 @@ class LineChart {
     const yMax = yExtent[1]
     this.yScale.domain([yMin, yMax])
 
-    const tickValuesX = [0, 25, 50, 75, 100]
+    const tickValuesX =
+      this.config.mode === 1
+        ? [0, 25, 50, 75, 100]
+        : [0, 100, 200, 300, 400, 500]
     const tickValuesY = d3.range(yMin, yMax, (yMax - yMin) / 4)
     tickValuesY.push(yMax)
 
@@ -232,9 +243,14 @@ class LineChart {
           .axisBottom(this.xScale)
           .tickValues(tickValuesX)
           .tickFormat((d, i) => {
-            if (i === 0) return '9:30'
-            if (i === 2) return '12:00/13:00'
-            if (i === 4) return '16:00'
+            if (this.config.mode === 1) {
+              if (i === 0) return '9:30'
+              if (i === 2) return '12:00/13:00'
+              if (i === 4) return '16:00'
+            } else {
+              if (i === tickValuesX.length - 1) return ''
+              return `Day ${i + 1}`
+            }
           })
       )
       .selectAll('text')
@@ -343,6 +359,10 @@ class LineChart {
       .attr('stroke', color)
       .attr('stroke-dasharray', '4 2')
       .attr('stroke-width', 0.5)
+  }
+
+  clear() {
+    d3.select(this.container).selectAll('*').remove()
   }
 
   updateData(newData) {

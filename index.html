@@ -4,26 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinChart SDK</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        padding: 5px;
+      }
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 10px 20px;
+        background-color: #f0f0f0;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      .tab.active {
+        background-color: #0bc0f1;
+        color: #fff;
+      }
+    </style>
   </head>
   <body>
+    <div class="tabs">
+      <div class="tab active" onclick="window.switchData(1)">1-Day Chart</div>
+      <div class="tab" onclick="window.switchData(5)">5-Day Chart</div>
+    </div>
     <div id="chart-container"></div>
     <script type="module">
       import FinChart from '/src/index.js'
-      import tencentData from '/public/time-chart-data.json'
+      import timeChartData1Day from '/public/time-chart-data.json'
+      import timeChartData5Day from '/public/time-chart-data-5.json'
       import { formatLatestTime } from './src/utils/format'
 
       const container = document.getElementById('chart-container')
+      let lineChart
 
-      const timeChartData = tencentData.data.data[0].list[0].list.map(
-        (item) => {
+      // 数据处理函数
+      function processData(data) {
+        return data.data.data[0].list[0].list.map((item) => {
           const timestamp = formatLatestTime(item.latestTime)
           const price = item.price ? item.price / 1000 : 0
           const avg = item.avg ? item.avg / 1000 : 0
-
-          if (isNaN(timestamp) || isNaN(price) || isNaN(avg)) {
-            console.error('Invalid data:', { timestamp, price, avg })
-          }
-
           return {
             ...item,
             time: item.latestTime + '',
@@ -31,16 +57,36 @@
             price,
             avg,
           }
-        }
-      )
-      console.log('timeChartData', timeChartData)
+        })
+      }
 
-      // 初始化分时图
-      const lineChart = new FinChart.charts.LineChart(container, {
-        width: 800,
-        height: 400,
-        data: timeChartData,
-      })
+      // 切换数据（确保定义在全局）
+      window.switchData = function (type) {
+        document
+          .querySelectorAll('.tab')
+          .forEach((tab) => tab.classList.remove('active'))
+        document
+          .querySelector(`.tab:nth-child(${type === 1 ? 1 : 2})`)
+          .classList.add('active')
+        const data = type === 1 ? timeChartData1Day : timeChartData5Day
+        const processedData = processData(data)
+
+        // 清除现有图表
+        if (lineChart) {
+          lineChart.clear()
+        }
+
+        // 重新创建图表
+        lineChart = new FinChart.charts.LineChart(container, {
+          width: 800,
+          height: 400,
+          data: processedData,
+          mode: type,
+        })
+      }
+
+      // 初始化 1 日分时图
+      switchData(1)
     </script>
   </body>
 </html>
