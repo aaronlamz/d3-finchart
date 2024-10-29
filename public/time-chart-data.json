@@ -3528,12 +3528,144 @@
                             {
                                 "latestTime": 20241029154800000,
                                 "preClose": 417200,
+                                "price": 417600,
+                                "avg": 418978,
+                                "volume": 16900,
+                                "amount": 7054532400,
+                                "netchng": 400,
+                                "pctchng": 10,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029154900000,
+                                "preClose": 417200,
+                                "price": 417200,
+                                "avg": 418973,
+                                "volume": 36000,
+                                "amount": 15026630000,
+                                "netchng": 0,
+                                "pctchng": 0,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155000000,
+                                "preClose": 417200,
+                                "price": 417200,
+                                "avg": 418960,
+                                "volume": 77401,
+                                "amount": 32284749300,
+                                "netchng": 0,
+                                "pctchng": 0,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155100000,
+                                "preClose": 417200,
                                 "price": 417400,
-                                "avg": 418979,
-                                "volume": 10300,
-                                "amount": 4299330000,
+                                "avg": 418957,
+                                "volume": 19701,
+                                "amount": 8221795000,
                                 "netchng": 200,
                                 "pctchng": 5,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155200000,
+                                "preClose": 417200,
+                                "price": 417400,
+                                "avg": 418953,
+                                "volume": 76275,
+                                "amount": 31903580000,
+                                "netchng": 200,
+                                "pctchng": 5,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155300000,
+                                "preClose": 417200,
+                                "price": 417000,
+                                "avg": 418946,
+                                "volume": 42540,
+                                "amount": 17748866000,
+                                "netchng": -200,
+                                "pctchng": -5,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155400000,
+                                "preClose": 417200,
+                                "price": 417600,
+                                "avg": 418939,
+                                "volume": 50100,
+                                "amount": 20904280000,
+                                "netchng": 400,
+                                "pctchng": 10,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155500000,
+                                "preClose": 417200,
+                                "price": 417200,
+                                "avg": 418936,
+                                "volume": 19083,
+                                "amount": 7967105000,
+                                "netchng": 0,
+                                "pctchng": 0,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155600000,
+                                "preClose": 417200,
+                                "price": 417400,
+                                "avg": 418934,
+                                "volume": 15200,
+                                "amount": 6342640000,
+                                "netchng": 200,
+                                "pctchng": 5,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155700000,
+                                "preClose": 417200,
+                                "price": 417600,
+                                "avg": 418927,
+                                "volume": 366000,
+                                "amount": 153240020000,
+                                "netchng": 400,
+                                "pctchng": 10,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155800000,
+                                "preClose": 417200,
+                                "price": 417600,
+                                "avg": 418925,
+                                "volume": 37200,
+                                "amount": 15562180000,
+                                "netchng": 400,
+                                "pctchng": 10,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029155900000,
+                                "preClose": 417200,
+                                "price": 418000,
+                                "avg": 418921,
+                                "volume": 35100,
+                                "amount": 14660590000,
+                                "netchng": 800,
+                                "pctchng": 19,
+                                "avgIndex": 0
+                            },
+                            {
+                                "latestTime": 20241029160000000,
+                                "preClose": 417200,
+                                "price": 418400,
+                                "avg": 418863,
+                                "volume": 1487600,
+                                "amount": 622411840000,
+                                "netchng": 1200,
+                                "pctchng": 29,
                                 "avgIndex": 0
                             }
                         ]
