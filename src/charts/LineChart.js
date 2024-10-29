@@ -30,6 +30,7 @@ class LineChart {
         upColor: 'red',
         downColor: 'green',
       },
+      gridColor: config.gridColor || 'rgba(200, 200, 200, 0.3)',
       base: config.base || 1000,
     }
     this.initChart()
@@ -166,10 +167,55 @@ class LineChart {
     return (hours * 60 * 60 + minutes * 60) * 1000
   }
 
+  renderGridLines(tickValuesX, tickValuesY) {
+    const gridClass = this.getClassName('grid')
+
+    this.svg
+      .append('g')
+      .attr('class', gridClass)
+      .selectAll('line.vertical-grid')
+      .data(tickValuesX)
+      .enter()
+      .append('line')
+      .attr('class', 'vertical-grid')
+      .attr('x1', (d) => this.xScale(d))
+      .attr('x2', (d) => this.xScale(d))
+      .attr('y1', this.config.padding)
+      .attr('y2', this.config.height - this.config.padding)
+      .attr('stroke', this.config.gridColor)
+      .attr('stroke-width', 0.5)
+      .attr('stroke-dasharray', '2,2')
+
+    this.svg
+      .append('g')
+      .attr('class', gridClass)
+      .selectAll('line.horizontal-grid')
+      .data(tickValuesY)
+      .enter()
+      .append('line')
+      .attr('class', 'horizontal-grid')
+      .attr('x1', this.config.padding)
+      .attr('x2', this.config.width - this.config.padding)
+      .attr('y1', (d) => this.yScale(d))
+      .attr('y2', (d) => this.yScale(d))
+      .attr('stroke', this.config.gridColor)
+      .attr('stroke-width', 0.5)
+      .attr('stroke-dasharray', '2,2')
+  }
+
   renderAxes(data) {
     const xAxisClass = this.getClassName('x-axis')
     const yAxisLeftClass = this.getClassName('y-axis-left')
     const yAxisRightClass = this.getClassName('y-axis-right')
+
+    const yExtent = d3.extent(data, (d) => d.price)
+    const yMin = yExtent[0]
+    const yMax = yExtent[1]
+    this.yScale.domain([yMin, yMax])
+
+    const tickValuesX = [0, 25, 50, 75, 100]
+    const tickValuesY = d3.range(yMin, yMax, (yMax - yMin) / 4)
+    tickValuesY.push(yMax)
 
     this.svg
       .append('g')
@@ -181,10 +227,12 @@ class LineChart {
       .call(
         d3
           .axisBottom(this.xScale)
-          .tickValues([0, 50, 100])
-          .tickFormat((d, i) =>
-            i === 1 ? '12:00/13:00' : i === 0 ? '09:30' : '16:00'
-          )
+          .tickValues(tickValuesX)
+          .tickFormat((d, i) => {
+            if (i === 0) return '9:30'
+            if (i === 2) return '12:00/13:00'
+            if (i === 4) return '16:00'
+          })
       )
       .selectAll('text')
       .attr('fill', this.config.xAxisFontColor)
@@ -193,45 +241,23 @@ class LineChart {
       .selectAll(`.${xAxisClass} .domain, .${xAxisClass} .tick line`)
       .attr('stroke', this.config.xAxisLineColor)
 
-    const yExtent = d3.extent(data, (d) => d.price)
-    const yMin = yExtent[0]
-    const yMax = yExtent[1]
-    this.yScale.domain([yMin, yMax])
+    const preClose = data[0]?.preClose / this.config.base || yMax / 2
+    const colorConfig = this.config.priceColorConfig
 
-    const tickValues = d3.range(yMin, yMax, (yMax - yMin) / 4)
-    tickValues.push(yMax)
-
-    const preClose = data[0].preClose / this.config.base
-
-    // 左侧 Y 轴
     this.svg
       .append('g')
       .attr('transform', 'translate(50, 0)')
       .attr('class', yAxisLeftClass)
-      .call(
-        d3
-          .axisLeft(this.yScale)
-          .tickValues(tickValues)
-          .tickFormat((d) => {
-            const color =
-              d > preClose
-                ? this.config.priceColorConfig.upColor
-                : this.config.priceColorConfig.downColor
-            return d.toFixed(2)
-          })
-      )
+      .call(d3.axisLeft(this.yScale).tickValues(tickValuesY))
       .selectAll('text')
       .attr('fill', (d) =>
-        d > preClose
-          ? this.config.priceColorConfig.upColor
-          : this.config.priceColorConfig.downColor
+        d > preClose ? colorConfig.upColor : colorConfig.downColor
       )
 
     this.svg
       .selectAll(`.${yAxisLeftClass} .domain, .${yAxisLeftClass} .tick line`)
       .attr('stroke', this.config.yAxisLineColor)
 
-    // 右侧 Y 轴显示涨跌幅
     this.svg
       .append('g')
       .attr('transform', `translate(${this.config.width - 50}, 0)`)
@@ -239,27 +265,27 @@ class LineChart {
       .call(
         d3
           .axisRight(this.yScale)
-          .tickValues(tickValues)
+          .tickValues(tickValuesY)
           .tickFormat((d) => {
-            const percentChange = ((d - preClose) / preClose) * 100
-            return percentChange.toFixed(2) + '%'
+            const diff = d - preClose
+            const percentage = ((diff / preClose) * 100).toFixed(2)
+            return `${percentage}%`
           })
       )
       .selectAll('text')
       .attr('fill', (d) =>
-        d > preClose
-          ? this.config.priceColorConfig.upColor
-          : this.config.priceColorConfig.downColor
+        d > preClose ? colorConfig.upColor : colorConfig.downColor
       )
 
     this.svg
       .selectAll(`.${yAxisRightClass} .domain, .${yAxisRightClass} .tick line`)
       .attr('stroke', this.config.yAxisLineColor)
+
+    this.renderGridLines(tickValuesX, tickValuesY)
   }
 
   renderChart() {
     const data = this.config.data
-
     if (!data.length) {
       console.error('没有数据可供渲染')
       return
@@ -267,6 +293,7 @@ class LineChart {
 
     this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
     this.svg.selectAll(`.${this.getClassName('area-path')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('grid')}`).remove()
 
     this.renderAxes(data)
 
