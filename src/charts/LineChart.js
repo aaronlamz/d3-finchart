@@ -46,6 +46,7 @@ class LineChart {
     this.addLogo()
     this.defineGradient()
     this.createScales()
+    this.renderGridGroup()
     this.createLineAndArea()
     this.renderChart()
 
@@ -167,12 +168,16 @@ class LineChart {
     return (hours * 60 * 60 + minutes * 60) * 1000
   }
 
-  renderGridLines(tickValuesX, tickValuesY) {
-    const gridClass = this.getClassName('grid')
-
-    this.svg
+  renderGridGroup() {
+    this.gridGroup = this.svg
       .append('g')
-      .attr('class', gridClass)
+      .attr('class', this.getClassName('grid-group'))
+  }
+
+  renderGridLines(tickValuesX, tickValuesY) {
+    this.gridGroup.selectAll('*').remove()
+
+    this.gridGroup
       .selectAll('line.vertical-grid')
       .data(tickValuesX)
       .enter()
@@ -186,9 +191,7 @@ class LineChart {
       .attr('stroke-width', 0.5)
       .attr('stroke-dasharray', '2,2')
 
-    this.svg
-      .append('g')
-      .attr('class', gridClass)
+    this.gridGroup
       .selectAll('line.horizontal-grid')
       .data(tickValuesY)
       .enter()
