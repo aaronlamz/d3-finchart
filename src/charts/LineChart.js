@@ -6,6 +6,7 @@ import * as d3 from 'd3'
 class LineChart {
   constructor(container, config = {}) {
     this.container = container
+    this.eventListeners = []
     this.config = {
       width: config.width || 800,
       height: config.height || 400,
@@ -62,10 +63,23 @@ class LineChart {
       this.addIndicators()
     }
 
-    window.addEventListener(
+    this.addEventListener(
+      window,
       'resize',
       this.debounce(this.resize.bind(this), 200)
     )
+  }
+
+  addEventListener(target, type, listener) {
+    target.addEventListener(type, listener)
+    this.eventListeners.push({ target, type, listener })
+  }
+
+  removeEventListeners() {
+    this.eventListeners.forEach(({ target, type, listener }) => {
+      target.removeEventListener(type, listener)
+    })
+    this.eventListeners = []
   }
 
   debounce(func, delay) {
@@ -374,10 +388,6 @@ class LineChart {
       .attr('stroke-dasharray', '4 2')
       .attr('stroke-width', 0.5)
   }
-  clearAll() {
-    // 清除所有svg内容重新渲染
-    d3.select(this.container).selectAll('*').remove()
-  }
 
   clear() {
     this.svg.selectAll(`.${this.getClassName('x-axis')}`).remove()
@@ -386,7 +396,12 @@ class LineChart {
     this.svg.selectAll(`.${this.getClassName('grid-group')}`).remove()
     this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
     this.svg.selectAll(`.${this.getClassName('area-path')}`).remove()
-    this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
+  }
+
+  clearAll() {
+    // 清除所有内容并移除事件监听器
+    d3.select(this.container).selectAll('*').remove()
+    this.removeEventListeners()
   }
 
   resize() {
