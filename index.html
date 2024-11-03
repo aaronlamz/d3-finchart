@@ -50,19 +50,22 @@
       let lineChart
 
       // 数据处理函数
-      function processData(data) {
-        return data.data.data[0].list[0].list.map((item) => {
-          const timestamp = formatLatestTime(item.latestTime)
-          const price = item.price ? item.price / 1000 : 0
-          const avg = item.avg ? item.avg / 1000 : 0
-          return {
-            ...item,
-            time: item.latestTime + '',
-            timestamp,
-            price,
-            avg,
-          }
-        })
+      function processData(res) {
+        // 扁平化处理多日数据，适配单日和多日数据结构
+        return res.data.data.flatMap((dayData) =>
+          dayData.list[0].list.map((item) => {
+            const timestamp = formatLatestTime(item.latestTime)
+            const price = item.price ? item.price / 1000 : 0
+            const avg = item.avg ? item.avg / 1000 : 0
+            return {
+              ...item,
+              time: item.latestTime + '',
+              timestamp,
+              price,
+              avg,
+            }
+          })
+        )
       }
 
       // 切换数据（确保定义在全局）
@@ -75,6 +78,7 @@
           .classList.add('active')
         const data = type === 1 ? timeChartData1Day : timeChartData5Day
         const processedData = processData(data)
+        console.log(processedData)
 
         // 清除现有图表
         if (lineChart) {
