@@ -18,7 +18,7 @@
         margin-bottom: 20px;
       }
       .tab {
-        padding: 10px 20px;
+        padding: 5px 10px;
         background-color: #f0f0f0;
         cursor: pointer;
         border-radius: 5px;
@@ -31,8 +31,12 @@
   </head>
   <body>
     <div class="tabs">
-      <div class="tab active" onclick="window.switchData(1)">1-Day Chart</div>
-      <div class="tab" onclick="window.switchData(5)">5-Day Chart</div>
+      <div class="tab active" onclick="window.switchData(1)">1D</div>
+      <div class="tab" onclick="window.switchData(5)">5D</div>
+      <div class="tab" onclick="window.switchData(5)">1K</div>
+      <div class="tab" onclick="window.switchData(5)">7K</div>
+      <div class="tab" onclick="window.switchData(5)">30K</div>
+      <div class="tab" onclick="window.switchData(5)">356K</div>
     </div>
     <div id="chart-container"></div>
     <script type="module">
