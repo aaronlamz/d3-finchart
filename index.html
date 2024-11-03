@@ -73,15 +73,17 @@
 
         // 清除现有图表
         if (lineChart) {
-          lineChart.clear()
+          lineChart.clearAll()
         }
 
         // 重新创建图表
         lineChart = new FinChart.charts.LineChart(container, {
-          width: 800,
-          height: 400,
+          width: container.clientWidth,
+          height: container.clientHeight,
           data: processedData,
           mode: type,
+          showAvgLine: true,
+          showPriceLine: true,
         })
       }
 

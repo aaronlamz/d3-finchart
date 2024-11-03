@@ -20,7 +20,7 @@ class LineChart {
         'rgba(4, 132, 206, 0)',
       ],
       market: config.market || 'hk',
-      mode: config.mode || 1, // 1 日或 5 日分时模式
+      mode: config.mode || 1,
       enableCrosshair: config.enableCrosshair || false,
       enableIndicators: config.enableIndicators || false,
       xAxisFontColor: config.xAxisFontColor || 'rgba(109, 109, 109, 1)',
@@ -61,17 +61,34 @@ class LineChart {
     if (this.config.enableIndicators) {
       this.addIndicators()
     }
+
+    window.addEventListener(
+      'resize',
+      this.debounce(this.resize.bind(this), 200)
+    )
+  }
+
+  debounce(func, delay) {
+    let timer
+    return function (...args) {
+      clearTimeout(timer)
+      timer = setTimeout(() => func.apply(this, args), delay)
+    }
   }
 
   createSvg() {
-    this.svg = d3
-      .select(this.container)
-      .append('svg')
+    if (!this.svg) {
+      this.svg = d3
+        .select(this.container)
+        .append('svg')
+        .attr('class', this.getClassName('svg-container'))
+    }
+
+    this.svg
       .attr('viewBox', `0 0 ${this.config.width} ${this.config.height}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('width', '100%')
       .style('height', 'auto')
-      .attr('class', this.getClassName('svg-container'))
   }
 
   addBackground() {
@@ -125,7 +142,7 @@ class LineChart {
   createScales() {
     this.xScale = d3
       .scaleLinear()
-      .domain([0, this.config.mode === 1 ? 100 : 500]) // 100 为 1 日，500 为 5 日
+      .domain([0, this.config.mode === 1 ? 100 : 500])
       .range([this.config.padding, this.config.width - this.config.padding])
 
     this.yScale = d3
@@ -168,7 +185,7 @@ class LineChart {
             (dayScaleFactor / 2)
       )
     }
-    return this.xScale(dayScaleFactor / 2) // 合并午休时间段
+    return this.xScale(dayScaleFactor / 2)
   }
 
   timeToMilliseconds(timeStr) {
@@ -310,10 +327,7 @@ class LineChart {
       return
     }
 
-    this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
-    this.svg.selectAll(`.${this.getClassName('area-path')}`).remove()
-    this.svg.selectAll(`.${this.getClassName('grid')}`).remove()
-
+    this.clear() // 清除之前的动态内容
     this.renderAxes(data)
 
     this.svg
@@ -360,9 +374,26 @@ class LineChart {
       .attr('stroke-dasharray', '4 2')
       .attr('stroke-width', 0.5)
   }
+  clearAll() {
+    // 清除所有svg内容重新渲染
+    d3.select(this.container).selectAll('*').remove()
+  }
 
   clear() {
-    d3.select(this.container).selectAll('*').remove()
+    this.svg.selectAll(`.${this.getClassName('x-axis')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('y-axis-left')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('y-axis-right')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('grid-group')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('area-path')}`).remove()
+    this.svg.selectAll(`.${this.getClassName('line-path')}`).remove()
+  }
+
+  resize() {
+    this.config.width = this.container.clientWidth
+    this.config.height = this.container.clientHeight
+    this.clear()
+    this.initChart()
   }
 
   updateData(newData) {
