@@ -51,6 +51,7 @@
 
       // 数据处理函数
       function processData(res) {
+        console.log('processData res', res)
         // 扁平化处理多日数据，适配单日和多日数据结构
         return res.data.data.flatMap((dayData) =>
           dayData.list[0].list.map((item) => {

@@ -154,13 +154,31 @@ class LineChart {
   }
 
   createScales() {
-    this.xScale = d3
-      .scaleLinear()
-      .domain([0, this.config.mode === 1 ? 100 : 500])
-      .range([this.config.padding, this.config.width - this.config.padding])
+    if (this.config.mode === 5) {
+      // 提取唯一日期作为 5 日分时图的刻度
+      this.uniqueDates = [
+        ...new Set(
+          this.config.data.map((d) => d.timestamp.toISOString().split('T')[0])
+        ),
+      ]
+      console.log('uniqueDates', this.uniqueDates, this.uniqueDates.length)
+      this.xScale = d3
+        .scaleLinear()
+        .domain([0, this.uniqueDates.length - 1]) // 每一天分布在刻度上
+        .range([this.config.padding, this.config.width - this.config.padding])
+    } else {
+      // 原来的 1 日分时图逻辑
+      this.xScale = d3
+        .scaleLinear()
+        .domain([0, 100])
+        .range([this.config.padding, this.config.width - this.config.padding])
+    }
 
+    // Y轴范围仍从数据中动态计算
+    const yExtent = d3.extent(this.config.data, (d) => d.price)
     this.yScale = d3
       .scaleLinear()
+      .domain([yExtent[0], yExtent[1]])
       .range([this.config.height - this.config.padding, this.config.padding])
   }
 
@@ -178,28 +196,79 @@ class LineChart {
   }
 
   getXScale(timestamp) {
-    const dayScaleFactor = this.config.mode === 1 ? 100 : 500
-    const openTime = this.timeToMilliseconds('09:30')
-    const lunchStartTime = this.timeToMilliseconds('12:00')
-    const lunchEndTime = this.timeToMilliseconds('13:00')
-    const closeTime = this.timeToMilliseconds('16:00')
+    const logPrefix = `[getXScale - mode: ${this.config.mode}]`
+    if (this.config.mode === 1) {
+      // 一日分时逻辑
+      const openTime = this.timeToMilliseconds('09:30')
+      const lunchStartTime = this.timeToMilliseconds('12:00')
+      const lunchEndTime = this.timeToMilliseconds('13:00')
+      const closeTime = this.timeToMilliseconds('16:00')
 
-    const timeOfDay =
-      timestamp.getHours() * 60 * 60 * 1000 + timestamp.getMinutes() * 60 * 1000
+      const totalMillis = closeTime - openTime - (lunchEndTime - lunchStartTime)
+      const intraDayMillis =
+        timestamp.getHours() * 3600 * 1000 + timestamp.getMinutes() * 60 * 1000
 
-    if (timeOfDay < lunchStartTime) {
-      return this.xScale(
-        ((timeOfDay - openTime) / (lunchStartTime - openTime)) *
-          (dayScaleFactor / 2)
+      let adjustedMillis
+      if (intraDayMillis >= lunchStartTime && intraDayMillis < lunchEndTime) {
+        adjustedMillis = lunchStartTime - openTime
+      } else if (intraDayMillis >= lunchEndTime) {
+        adjustedMillis =
+          intraDayMillis - (lunchEndTime - lunchStartTime) - openTime
+      } else {
+        adjustedMillis = intraDayMillis - openTime
+      }
+
+      adjustedMillis = Math.max(0, Math.min(adjustedMillis, totalMillis))
+      const intraDayRatio = adjustedMillis / totalMillis
+
+      console.log(
+        `${logPrefix} One-day chart: totalMillis=${totalMillis}, adjustedMillis=${adjustedMillis}, intraDayRatio=${intraDayRatio}`
       )
-    } else if (timeOfDay >= lunchEndTime) {
-      return this.xScale(
-        dayScaleFactor / 2 +
-          ((timeOfDay - lunchEndTime) / (closeTime - lunchEndTime)) *
-            (dayScaleFactor / 2)
+
+      return this.xScale(intraDayRatio * 100)
+    } else if (this.config.mode === 5) {
+      // 五日分时逻辑
+      const timestampDate = timestamp.toISOString().split('T')[0]
+      const dayIndex = this.uniqueDates.findIndex(
+        (date) => date === timestampDate
       )
+
+      if (dayIndex === -1) {
+        console.warn(`未找到对应日期: ${timestampDate}`)
+        return this.config.padding // 返回最小范围
+      }
+
+      const intraDayMillis =
+        timestamp.getHours() * 3600 * 1000 + timestamp.getMinutes() * 60 * 1000
+      const openTime = this.timeToMilliseconds('09:30')
+      const lunchStartTime = this.timeToMilliseconds('12:00')
+      const lunchEndTime = this.timeToMilliseconds('13:00')
+      const closeTime = this.timeToMilliseconds('16:00')
+
+      const totalMillis = closeTime - openTime - (lunchEndTime - lunchStartTime)
+      let adjustedMillis
+
+      if (intraDayMillis >= lunchStartTime && intraDayMillis < lunchEndTime) {
+        adjustedMillis = lunchStartTime - openTime
+      } else if (intraDayMillis >= lunchEndTime) {
+        adjustedMillis =
+          intraDayMillis - (lunchEndTime - lunchStartTime) - openTime
+      } else {
+        adjustedMillis = intraDayMillis - openTime
+      }
+
+      adjustedMillis = Math.max(0, Math.min(adjustedMillis, totalMillis))
+      const intraDayRatio = adjustedMillis / totalMillis
+
+      // 确保 xValue 不超出 uniqueDates 范围
+      const xValue = Math.min(
+        this.uniqueDates.length - 1,
+        Math.max(0, dayIndex + intraDayRatio)
+      )
+
+      // 通过 xScale 映射到正确的位置
+      return this.xScale(xValue)
     }
-    return this.xScale(dayScaleFactor / 2)
   }
 
   timeToMilliseconds(timeStr) {
@@ -216,12 +285,13 @@ class LineChart {
   renderGridLines(tickValuesX, tickValuesY) {
     this.gridGroup.selectAll('*').remove()
 
+    // 绘制垂直网格线
     this.gridGroup
       .selectAll('line.vertical-grid')
       .data(tickValuesX)
       .enter()
       .append('line')
-      .attr('class', 'vertical-grid')
+      .attr('class', this.getClassName('vertical-grid'))
       .attr('x1', (d) => this.xScale(d))
       .attr('x2', (d) => this.xScale(d))
       .attr('y1', this.config.padding)
@@ -230,12 +300,13 @@ class LineChart {
       .attr('stroke-width', 0.5)
       .attr('stroke-dasharray', '2,2')
 
+    // 绘制水平网格线
     this.gridGroup
       .selectAll('line.horizontal-grid')
       .data(tickValuesY)
       .enter()
       .append('line')
-      .attr('class', 'horizontal-grid')
+      .attr('class', this.getClassName('horizontal-grid'))
       .attr('x1', this.config.padding)
       .attr('x2', this.config.width - this.config.padding)
       .attr('y1', (d) => this.yScale(d))
@@ -255,13 +326,15 @@ class LineChart {
     const yMax = yExtent[1]
     this.yScale.domain([yMin, yMax])
 
+    // X 轴刻度值
     const tickValuesX =
-      this.config.mode === 1
-        ? [0, 25, 50, 75, 100]
-        : [0, 100, 200, 300, 400, 500]
+      this.config.mode === 5
+        ? this.uniqueDates.map((_, i) => i) // 5 日分时图使用日期索引
+        : [0, 25, 50, 75, 100]
     const tickValuesY = d3.range(yMin, yMax, (yMax - yMin) / 4)
     tickValuesY.push(yMax)
 
+    // 渲染 X 轴
     this.svg
       .append('g')
       .attr(
@@ -273,16 +346,17 @@ class LineChart {
         d3
           .axisBottom(this.xScale)
           .tickValues(tickValuesX)
-          .tickFormat((d, i) => {
-            if (this.config.mode === 1) {
-              if (i === 0) return '9:30'
-              if (i === 2) return '12:00/13:00'
-              if (i === 4) return '16:00'
-            } else {
-              if (i === tickValuesX.length - 1) return ''
-              return `Day ${i + 1}`
-            }
-          })
+          .tickFormat((d) =>
+            this.config.mode === 5
+              ? this.uniqueDates[d] // 显示 5 日分时图的日期
+              : d === 0
+                ? '9:30'
+                : d === 50
+                  ? '12:00/13:00'
+                  : d === 100
+                    ? '16:00'
+                    : ''
+          )
       )
       .selectAll('text')
       .attr('fill', this.config.xAxisFontColor)
