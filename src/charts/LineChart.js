@@ -196,36 +196,31 @@ class LineChart {
   }
 
   getXScale(timestamp) {
-    const logPrefix = `[getXScale - mode: ${this.config.mode}]`
     if (this.config.mode === 1) {
       // 一日分时逻辑
+      const dayScaleFactor = 100
       const openTime = this.timeToMilliseconds('09:30')
       const lunchStartTime = this.timeToMilliseconds('12:00')
       const lunchEndTime = this.timeToMilliseconds('13:00')
       const closeTime = this.timeToMilliseconds('16:00')
 
-      const totalMillis = closeTime - openTime - (lunchEndTime - lunchStartTime)
-      const intraDayMillis =
-        timestamp.getHours() * 3600 * 1000 + timestamp.getMinutes() * 60 * 1000
+      const timeOfDay =
+        timestamp.getHours() * 60 * 60 * 1000 +
+        timestamp.getMinutes() * 60 * 1000
 
-      let adjustedMillis
-      if (intraDayMillis >= lunchStartTime && intraDayMillis < lunchEndTime) {
-        adjustedMillis = lunchStartTime - openTime
-      } else if (intraDayMillis >= lunchEndTime) {
-        adjustedMillis =
-          intraDayMillis - (lunchEndTime - lunchStartTime) - openTime
-      } else {
-        adjustedMillis = intraDayMillis - openTime
+      if (timeOfDay < lunchStartTime) {
+        return this.xScale(
+          ((timeOfDay - openTime) / (lunchStartTime - openTime)) *
+            (dayScaleFactor / 2)
+        )
+      } else if (timeOfDay >= lunchEndTime) {
+        return this.xScale(
+          dayScaleFactor / 2 +
+            ((timeOfDay - lunchEndTime) / (closeTime - lunchEndTime)) *
+              (dayScaleFactor / 2)
+        )
       }
-
-      adjustedMillis = Math.max(0, Math.min(adjustedMillis, totalMillis))
-      const intraDayRatio = adjustedMillis / totalMillis
-
-      console.log(
-        `${logPrefix} One-day chart: totalMillis=${totalMillis}, adjustedMillis=${adjustedMillis}, intraDayRatio=${intraDayRatio}`
-      )
-
-      return this.xScale(intraDayRatio * 100)
+      return this.xScale(dayScaleFactor / 2)
     } else if (this.config.mode === 5) {
       // 五日分时逻辑
       const timestampDate = timestamp.toISOString().split('T')[0]
